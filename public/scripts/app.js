@@ -102,16 +102,48 @@ var HistoryList = function HistoryList(props) {
   );
 };
 
-var Transcript = function Transcript(props) {
+var msg = function msg(prop) {
+  var _props = props,
+      petOwner = _props.petOwner,
+      petDesk = _props.petDesk,
+      msg = _props.msg;
+
+
   return React.createElement(
     "div",
     null,
     React.createElement(
       "p",
       null,
-      props.transcript
+      petOwner
     )
   );
+};
+
+var Transcript = function Transcript(props) {
+  var transcript = props.transcript;
+  var arr = transcript.split("[").filter(function (msg) {
+    return msg !== "";
+  }).map(function (msg) {
+    return msg.replace("Pet Owner]", props.petOwner.split(" ")[0]).replace("Vet Front Desk]", props.vetDesk);
+  });
+  console.log(props.petOwner, props.petDesk);
+  return React.createElement(
+    "div",
+    null,
+    arr.map(function (str, i) {
+      return React.createElement(
+        "p",
+        { key: i },
+        str
+      );
+    })
+  );
+};
+
+Transcript.defaultProps = {
+  petOwner: "Pet Owner",
+  vetDesk: "Vet Front Desk"
 };
 
 var Analytics = function (_React$Component2) {
@@ -129,14 +161,26 @@ var Analytics = function (_React$Component2) {
   _createClass(Analytics, [{
     key: "formatCategory",
     value: function formatCategory(cat) {
-      var arr = cat.replaceAll("_", " ").split("");
-      arr[0] = arr[0].toUpperCase();
+      var arr = cat.replaceAll("_", " ").toUpperCase();
 
-      return arr.join("") + ":";
+      return arr + ":";
+    }
+  }, {
+    key: "formatItem",
+    value: function formatItem(item) {
+      if (typeof item === "string") {
+        var arr = item.split("");
+        arr[0] = arr[0].toUpperCase();
+
+        return arr.join("") + ".";
+      }
+      return item;
     }
   }, {
     key: "createContentArray",
     value: function createContentArray(obj) {
+      var _this3 = this;
+
       var content = [];
       for (var i in obj) {
         content.push(this.formatCategory(i));
@@ -146,9 +190,12 @@ var Analytics = function (_React$Component2) {
             content.push(temp[j]);
           }
         } else if (Array.isArray(obj[i])) {
-          content = [].concat(_toConsumableArray(content), _toConsumableArray(obj[i]));
+          var newArr = obj[i].map(function (obj) {
+            return _this3.formatItem(obj);
+          });
+          content = [].concat(_toConsumableArray(content), _toConsumableArray(newArr));
         } else {
-          content.push(obj[i]);
+          content.push(this.formatItem(obj[i]));
         }
       }
       return content;
@@ -157,13 +204,13 @@ var Analytics = function (_React$Component2) {
     key: "render",
     value: function render() {
       var analytics = this.createContentArray(this.state);
-      console.log(analytics);
+      //console.log(analytics);
       return React.createElement(
         "div",
         null,
         analytics.map(function (analytic, i) {
           var isString = typeof analytic === "string";
-          var isCategory = isString && analytic.split("").includes(":");
+          var isCategory = isString && analytic.split("").pop() === ":";
 
           return isString && isCategory ? React.createElement(
             "h3",
@@ -186,18 +233,18 @@ var VetCallReviewApp = function (_React$Component3) {
   _inherits(VetCallReviewApp, _React$Component3);
 
   function VetCallReviewApp(props) {
-    var _this3;
+    var _this4;
 
     _classCallCheck(this, VetCallReviewApp);
 
-    (_this3 = _possibleConstructorReturn(this, (VetCallReviewApp.__proto__ || Object.getPrototypeOf(VetCallReviewApp)).call(this, props)), _this3), (_this3.handleAudio = _this3.handleAudio.bind(_this3), _this3.state = {
+    (_this4 = _possibleConstructorReturn(this, (VetCallReviewApp.__proto__ || Object.getPrototypeOf(VetCallReviewApp)).call(this, props)), _this4), (_this4.handleAudio = _this4.handleAudio.bind(_this4), _this4.state = {
       practiceName: props.practiceName,
       logoUrl: props.logoUrl,
       transcript: props.transcript,
       analytics: props.analytics,
       history: props.history
     });
-    return _this3;
+    return _this4;
   }
 
   _createClass(VetCallReviewApp, [{
@@ -219,13 +266,14 @@ var VetCallReviewApp = function (_React$Component3) {
           analytics = _state.analytics,
           history = _state.history;
 
+      var petOwner = analytics["critical_details"]["pet_owner_name"];
       return React.createElement(
         "div",
         null,
         React.createElement(Header, { practiceName: practiceName }),
         React.createElement(UploadFile, { handleAudio: this.handleAudio }),
         React.createElement(HistoryList, { history: history }),
-        React.createElement(Transcript, { transcript: transcript }),
+        React.createElement(Transcript, { transcript: transcript, petOwner: petOwner }),
         React.createElement(Analytics, { analytics: analytics })
       );
     }

@@ -48,12 +48,39 @@ const HistoryList = (props) => {
   );
 };
 
-const Transcript = (props) => {
+const msg = (prop) => {
+  const { petOwner, petDesk, msg } = props;
+
   return (
     <div>
-      <p>{props.transcript}</p>
+      <p>{petOwner}</p>
     </div>
   );
+};
+
+const Transcript = (props) => {
+  const transcript = props.transcript;
+  const arr = transcript
+    .split("[")
+    .filter((msg) => msg !== "")
+    .map((msg) =>
+      msg
+        .replace("Pet Owner]", props.petOwner.split(" ")[0])
+        .replace("Vet Front Desk]", props.vetDesk)
+    );
+  console.log(props.petOwner, props.petDesk);
+  return (
+    <div>
+      {arr.map((str, i) => (
+        <p key={i}>{str}</p>
+      ))}
+    </div>
+  );
+};
+
+Transcript.defaultProps = {
+  petOwner: "Pet Owner",
+  vetDesk: "Vet Front Desk",
 };
 
 class Analytics extends React.Component {
@@ -62,11 +89,21 @@ class Analytics extends React.Component {
       ((this.createContentArray = this.createContentArray.bind(this)),
       (this.state = props.analytics));
   }
-  formatCategory(cat) {
-    let arr = cat.replaceAll("_", " ").split("");
-    arr[0] = arr[0].toUpperCase();
 
-    return arr.join("") + ":";
+  formatCategory(cat) {
+    let arr = cat.replaceAll("_", " ").toUpperCase();
+
+    return arr + ":";
+  }
+
+  formatItem(item) {
+    if (typeof item === "string") {
+      let arr = item.split("");
+      arr[0] = arr[0].toUpperCase();
+
+      return arr.join("") + ".";
+    }
+    return item;
   }
 
   createContentArray(obj) {
@@ -79,21 +116,22 @@ class Analytics extends React.Component {
           content.push(temp[j]);
         }
       } else if (Array.isArray(obj[i])) {
-        content = [...content, ...obj[i]];
+        let newArr = obj[i].map((obj) => this.formatItem(obj));
+        content = [...content, ...newArr];
       } else {
-        content.push(obj[i]);
+        content.push(this.formatItem(obj[i]));
       }
     }
     return content;
   }
   render() {
     const analytics = this.createContentArray(this.state);
-    console.log(analytics);
+    //console.log(analytics);
     return (
       <div>
         {analytics.map((analytic, i) => {
           let isString = typeof analytic === "string";
-          let isCategory = isString && analytic.split("").includes(":");
+          let isCategory = isString && analytic.split("").pop() === ":";
 
           return isString && isCategory ? (
             <h3 key={analytic + i}>{analytic}</h3>
@@ -128,12 +166,13 @@ class VetCallReviewApp extends React.Component {
   render() {
     const { practiceName, logoUrl, transcript, analytics, history } =
       this.state;
+    const petOwner = analytics["critical_details"]["pet_owner_name"];
     return (
       <div>
         <Header practiceName={practiceName} />
         <UploadFile handleAudio={this.handleAudio} />
         <HistoryList history={history} />
-        <Transcript transcript={transcript} />
+        <Transcript transcript={transcript} petOwner={petOwner} />
         <Analytics analytics={analytics} />
       </div>
     );
