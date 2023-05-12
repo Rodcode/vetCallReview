@@ -48,25 +48,97 @@ const HistoryList = (props) => {
   );
 };
 
-const Transcript = (props) => {
+const msg = (prop) => {
+  const { petOwner, petDesk, msg } = props;
+
   return (
     <div>
-      <p>{props.transcript}</p>
+      <p>{petOwner}</p>
     </div>
   );
+};
+
+const Transcript = (props) => {
+  const transcript = props.transcript;
+  const arr = transcript
+    .split("[")
+    .filter((msg) => msg !== "")
+    .map((msg) =>
+      msg
+        .replace("Pet Owner]", props.petOwner.split(" ")[0])
+        .replace("Vet Front Desk]", props.vetDesk)
+    );
+  console.log(props.petOwner, props.petDesk);
+  return (
+    <div>
+      {arr.map((str, i) => (
+        <p key={i}>{str}</p>
+      ))}
+    </div>
+  );
+};
+
+Transcript.defaultProps = {
+  petOwner: "Pet Owner",
+  vetDesk: "Vet Front Desk",
 };
 
 class Analytics extends React.Component {
   constructor(props) {
     super(props),
-      (this.state = {
-        tone: props["tone_of_call"],
-      });
+      ((this.createContentArray = this.createContentArray.bind(this)),
+      (this.state = props.analytics));
+  }
+
+  formatCategory(cat) {
+    let arr = cat.replaceAll("_", " ").toUpperCase();
+
+    return arr + ":";
+  }
+
+  formatItem(item) {
+    if (typeof item === "string") {
+      let arr = item.split("");
+      arr[0] = arr[0].toUpperCase();
+
+      return arr.join("") + ".";
+    }
+    return item;
+  }
+
+  createContentArray(obj) {
+    let content = [];
+    for (const i in obj) {
+      content.push(this.formatCategory(i));
+      if (typeof obj[i] === "object" && !Array.isArray(obj[i])) {
+        const temp = this.createContentArray(obj[i]);
+        for (const j in temp) {
+          content.push(temp[j]);
+        }
+      } else if (Array.isArray(obj[i])) {
+        let newArr = obj[i].map((obj) => this.formatItem(obj));
+        content = [...content, ...newArr];
+      } else {
+        content.push(this.formatItem(obj[i]));
+      }
+    }
+    return content;
   }
   render() {
+    const analytics = this.createContentArray(this.state);
+    //console.log(analytics);
     return (
       <div>
-        <p>{JSON.stringify(this.props.analytics)}</p>
+        {analytics.map((analytic, i) => {
+          let isString = typeof analytic === "string";
+          let isCategory = isString && analytic.split("").pop() === ":";
+
+          return isString && isCategory ? (
+            <h3 key={analytic + i}>{analytic}</h3>
+          ) : (
+            <p key={analytic + i}>{analytic}</p>
+          );
+        })}
       </div>
     );
   }
@@ -94,12 +166,13 @@ class VetCallReviewApp extends React.Component {
   render() {
     const { practiceName, logoUrl, transcript, analytics, history } =
       this.state;
+    const petOwner = analytics["critical_details"]["pet_owner_name"];
     return (
       <div>
         <Header practiceName={practiceName} />
         <UploadFile handleAudio={this.handleAudio} />
         <HistoryList history={history} />
-        <Transcript transcript={transcript} />
+        <Transcript transcript={transcript} petOwner={petOwner} />
         <Analytics analytics={analytics} />
       </div>
     );
@@ -160,9 +233,9 @@ const analytics = {
       "licking paws",
       "possible rash or irritation on paws",
     ],
-    appointment_date_time: "tomorrow, 10:30 AM",
+    "appointment_date_&_time": "tomorrow, 10:30 AM",
   },
-  offerings_add_ons: [],
+  "offerings_add-ons": [],
   overall_tone_grade: 10,
 };
 
