@@ -1,6 +1,10 @@
 "use strict";
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -118,31 +122,59 @@ var Analytics = function (_React$Component2) {
 
     _classCallCheck(this, Analytics);
 
-    (_this2 = _possibleConstructorReturn(this, (Analytics.__proto__ || Object.getPrototypeOf(Analytics)).call(this, props)), _this2), (_this2.extractObjArrays = _this2.extractObjArrays.bind(_this2), _this2.state = props.analytics);
+    (_this2 = _possibleConstructorReturn(this, (Analytics.__proto__ || Object.getPrototypeOf(Analytics)).call(this, props)), _this2), (_this2.createContentArray = _this2.createContentArray.bind(_this2), _this2.state = props.analytics);
     return _this2;
   }
 
   _createClass(Analytics, [{
-    key: "extractObjArrays",
-    value: function extractObjArrays(obj) {
-      return [Object.keys(obj), Object.values(obj)];
+    key: "formatCategory",
+    value: function formatCategory(cat) {
+      var arr = cat.replaceAll("_", " ").split("");
+      arr[0] = arr[0].toUpperCase();
+
+      return arr.join("") + ":";
+    }
+  }, {
+    key: "createContentArray",
+    value: function createContentArray(obj) {
+      var content = [];
+      for (var i in obj) {
+        content.push(this.formatCategory(i));
+        if (_typeof(obj[i]) === "object" && !Array.isArray(obj[i])) {
+          var temp = this.createContentArray(obj[i]);
+          for (var j in temp) {
+            content.push(temp[j]);
+          }
+        } else if (Array.isArray(obj[i])) {
+          content = [].concat(_toConsumableArray(content), _toConsumableArray(obj[i]));
+        } else {
+          content.push(obj[i]);
+        }
+      }
+      return content;
     }
   }, {
     key: "render",
     value: function render() {
-      var analytics = this.props.analytics;
-
-      var testing = this.extractObjArrays(this.state);
-      console.log(testing);
-      console.log(this.state);
+      var analytics = this.createContentArray(this.state);
+      console.log(analytics);
       return React.createElement(
         "div",
         null,
-        React.createElement(
-          "p",
-          null,
-          JSON.stringify(analytics)
-        )
+        analytics.map(function (analytic, i) {
+          var isString = typeof analytic === "string";
+          var isCategory = isString && analytic.split("").includes(":");
+
+          return isString && isCategory ? React.createElement(
+            "h3",
+            { key: analytic + i },
+            analytic
+          ) : React.createElement(
+            "p",
+            { key: analytic + i },
+            analytic
+          );
+        })
       );
     }
   }]);
@@ -213,9 +245,9 @@ var analytics = {
     age: 6,
     vaccines: "up to date",
     symptoms: ["limping", "licking paws", "possible rash or irritation on paws"],
-    appointment_date_time: "tomorrow, 10:30 AM"
+    "appointment_date_&_time": "tomorrow, 10:30 AM"
   },
-  offerings_add_ons: [],
+  "offerings_add-ons": [],
   overall_tone_grade: 10
 };
 

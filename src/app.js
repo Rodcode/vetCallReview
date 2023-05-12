@@ -59,21 +59,48 @@ const Transcript = (props) => {
 class Analytics extends React.Component {
   constructor(props) {
     super(props),
-      ((this.extractObjArrays = this.extractObjArrays.bind(this)),
+      ((this.createContentArray = this.createContentArray.bind(this)),
       (this.state = props.analytics));
   }
-  extractObjArrays(obj) {
-    return [Object.keys(obj), Object.values(obj)];
+  formatCategory(cat) {
+    let arr = cat.replaceAll("_", " ").split("");
+    arr[0] = arr[0].toUpperCase();
+
+    return arr.join("") + ":";
+  }
+
+  createContentArray(obj) {
+    let content = [];
+    for (const i in obj) {
+      content.push(this.formatCategory(i));
+      if (typeof obj[i] === "object" && !Array.isArray(obj[i])) {
+        const temp = this.createContentArray(obj[i]);
+        for (const j in temp) {
+          content.push(temp[j]);
+        }
+      } else if (Array.isArray(obj[i])) {
+        content = [...content, ...obj[i]];
+      } else {
+        content.push(obj[i]);
+      }
+    }
+    return content;
   }
   render() {
-    const { analytics } = this.props;
-    const testing = this.extractObjArrays(this.state);
-    console.log(testing);
-    console.log(this.state);
+    const analytics = this.createContentArray(this.state);
+    console.log(analytics);
     return (
       <div>
-        <p>{JSON.stringify(analytics)}</p>
-        {}
+        {analytics.map((analytic, i) => {
+          let isString = typeof analytic === "string";
+          let isCategory = isString && analytic.split("").includes(":");
+
+          return isString && isCategory ? (
+            <h3 key={analytic + i}>{analytic}</h3>
+          ) : (
+            <p key={analytic + i}>{analytic}</p>
+          );
+        })}
       </div>
     );
   }
@@ -167,9 +194,9 @@ const analytics = {
       "licking paws",
       "possible rash or irritation on paws",
     ],
-    appointment_date_time: "tomorrow, 10:30 AM",
+    "appointment_date_&_time": "tomorrow, 10:30 AM",
   },
-  offerings_add_ons: [],
+  "offerings_add-ons": [],
   overall_tone_grade: 10,
 };
 
