@@ -118,22 +118,30 @@ var Analytics = function (_React$Component2) {
 
     _classCallCheck(this, Analytics);
 
-    (_this2 = _possibleConstructorReturn(this, (Analytics.__proto__ || Object.getPrototypeOf(Analytics)).call(this, props)), _this2), _this2.state = {
-      tone: props["tone_of_call"]
-    };
+    (_this2 = _possibleConstructorReturn(this, (Analytics.__proto__ || Object.getPrototypeOf(Analytics)).call(this, props)), _this2), (_this2.extractObjArrays = _this2.extractObjArrays.bind(_this2), _this2.state = props.analytics);
     return _this2;
   }
 
   _createClass(Analytics, [{
+    key: "extractObjArrays",
+    value: function extractObjArrays(obj) {
+      return [Object.keys(obj), Object.values(obj)];
+    }
+  }, {
     key: "render",
     value: function render() {
+      var analytics = this.props.analytics;
+
+      var testing = this.extractObjArrays(this.state);
+      console.log(testing);
+      console.log(this.state);
       return React.createElement(
         "div",
         null,
         React.createElement(
           "p",
           null,
-          JSON.stringify(this.props.analytics)
+          JSON.stringify(analytics)
         )
       );
     }

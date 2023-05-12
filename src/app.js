@@ -59,14 +59,21 @@ const Transcript = (props) => {
 class Analytics extends React.Component {
   constructor(props) {
     super(props),
-      (this.state = {
-        tone: props["tone_of_call"],
-      });
+      ((this.extractObjArrays = this.extractObjArrays.bind(this)),
+      (this.state = props.analytics));
+  }
+  extractObjArrays(obj) {
+    return [Object.keys(obj), Object.values(obj)];
   }
   render() {
+    const { analytics } = this.props;
+    const testing = this.extractObjArrays(this.state);
+    console.log(testing);
+    console.log(this.state);
     return (
       <div>
-        <p>{JSON.stringify(this.props.analytics)}</p>
+        <p>{JSON.stringify(analytics)}</p>
+        {}
       </div>
     );
   }
