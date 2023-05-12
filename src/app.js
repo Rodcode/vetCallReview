@@ -48,19 +48,23 @@ const HistoryList = (props) => {
   );
 };
 
-const msg = (prop) => {
-  const { petOwner, petDesk, msg } = props;
-
+const Msg = (props) => {
+  const { owner, str, desk } = props;
+  const isOwner = str.split(":")[0] === owner;
+  const speaker = isOwner ? owner : desk;
+  const msg = isOwner
+    ? str.replace(`${owner}:`, "")
+    : str.replace(`${desk}:`, "");
   return (
     <div>
-      <p>{petOwner}</p>
+      <h4>{speaker}</h4>
+      <p>{msg}</p>
     </div>
   );
 };
 
 const Transcript = (props) => {
-  const transcript = props.transcript;
-  const arr = transcript
+  const transcript = props.transcript
     .split("[")
     .filter((msg) => msg !== "")
     .map((msg) =>
@@ -68,11 +72,11 @@ const Transcript = (props) => {
         .replace("Pet Owner]", props.petOwner.split(" ")[0])
         .replace("Vet Front Desk]", props.vetDesk)
     );
-  console.log(props.petOwner, props.petDesk);
+  const owner = props.petOwner.split(" ")[0];
   return (
     <div>
-      {arr.map((str, i) => (
-        <p key={i}>{str}</p>
+      {transcript.map((str, i) => (
+        <Msg key={i} str={str} owner={owner} desk={props.vetDesk} />
       ))}
     </div>
   );
@@ -81,6 +85,26 @@ const Transcript = (props) => {
 Transcript.defaultProps = {
   petOwner: "Pet Owner",
   vetDesk: "Vet Front Desk",
+};
+
+const Grade = (props) => {
+  const { grade, tone } = props;
+  return (
+    <div>
+      <h1>{grade}</h1>
+      <h4>{tone}</h4>
+    </div>
+  );
+};
+
+const CriticalDetails = (props) => {
+  return (
+    <div>
+      {props.details.map((detail, i) => {
+        return <p key={i}>{detail}</p>;
+      })}
+    </div>
+  );
 };
 
 class Analytics extends React.Component {
@@ -126,19 +150,17 @@ class Analytics extends React.Component {
   }
   render() {
     const analytics = this.createContentArray(this.state);
-    //console.log(analytics);
+    console.log(analytics);
+    const grade = analytics.pop();
+    const tone = analytics[1].toUpperCase().replace(".", "");
+    analytics.pop();
+    analytics.pop();
+    const details = analytics.slice(2);
+
     return (
       <div>
-        {analytics.map((analytic, i) => {
-          let isString = typeof analytic === "string";
-          let isCategory = isString && analytic.split("").pop() === ":";
-
-          return isString && isCategory ? (
-            <h3 key={analytic + i}>{analytic}</h3>
-          ) : (
-            <p key={analytic + i}>{analytic}</p>
-          );
-        })}
+        <Grade grade={grade} tone={tone} />
+        <CriticalDetails details={details} />
       </div>
     );
   }

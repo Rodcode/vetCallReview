@@ -102,41 +102,42 @@ var HistoryList = function HistoryList(props) {
   );
 };
 
-var msg = function msg(prop) {
-  var _props = props,
-      petOwner = _props.petOwner,
-      petDesk = _props.petDesk,
-      msg = _props.msg;
+var Msg = function Msg(props) {
+  var owner = props.owner,
+      str = props.str,
+      desk = props.desk;
 
-
+  var isOwner = str.split(":")[0] === owner;
+  var speaker = isOwner ? owner : desk;
+  var msg = isOwner ? str.replace(owner + ":", "") : str.replace(desk + ":", "");
   return React.createElement(
     "div",
     null,
     React.createElement(
+      "h4",
+      null,
+      speaker
+    ),
+    React.createElement(
       "p",
       null,
-      petOwner
+      msg
     )
   );
 };
 
 var Transcript = function Transcript(props) {
-  var transcript = props.transcript;
-  var arr = transcript.split("[").filter(function (msg) {
+  var transcript = props.transcript.split("[").filter(function (msg) {
     return msg !== "";
   }).map(function (msg) {
     return msg.replace("Pet Owner]", props.petOwner.split(" ")[0]).replace("Vet Front Desk]", props.vetDesk);
   });
-  console.log(props.petOwner, props.petDesk);
+  var owner = props.petOwner.split(" ")[0];
   return React.createElement(
     "div",
     null,
-    arr.map(function (str, i) {
-      return React.createElement(
-        "p",
-        { key: i },
-        str
-      );
+    transcript.map(function (str, i) {
+      return React.createElement(Msg, { key: i, str: str, owner: owner, desk: props.vetDesk });
     })
   );
 };
@@ -144,6 +145,40 @@ var Transcript = function Transcript(props) {
 Transcript.defaultProps = {
   petOwner: "Pet Owner",
   vetDesk: "Vet Front Desk"
+};
+
+var Grade = function Grade(props) {
+  var grade = props.grade,
+      tone = props.tone;
+
+  return React.createElement(
+    "div",
+    null,
+    React.createElement(
+      "h1",
+      null,
+      grade
+    ),
+    React.createElement(
+      "h4",
+      null,
+      tone
+    )
+  );
+};
+
+var CriticalDetails = function CriticalDetails(props) {
+  return React.createElement(
+    "div",
+    null,
+    props.details.map(function (detail, i) {
+      return React.createElement(
+        "p",
+        { key: i },
+        detail
+      );
+    })
+  );
 };
 
 var Analytics = function (_React$Component2) {
@@ -204,24 +239,18 @@ var Analytics = function (_React$Component2) {
     key: "render",
     value: function render() {
       var analytics = this.createContentArray(this.state);
-      //console.log(analytics);
+      console.log(analytics);
+      var grade = analytics.pop();
+      var tone = analytics[1].toUpperCase().replace(".", "");
+      analytics.pop();
+      analytics.pop();
+      var details = analytics.slice(2);
+
       return React.createElement(
         "div",
         null,
-        analytics.map(function (analytic, i) {
-          var isString = typeof analytic === "string";
-          var isCategory = isString && analytic.split("").pop() === ":";
-
-          return isString && isCategory ? React.createElement(
-            "h3",
-            { key: analytic + i },
-            analytic
-          ) : React.createElement(
-            "p",
-            { key: analytic + i },
-            analytic
-          );
-        })
+        React.createElement(Grade, { grade: grade, tone: tone }),
+        React.createElement(CriticalDetails, { details: details })
       );
     }
   }]);
