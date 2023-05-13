@@ -3,10 +3,18 @@
   "version": "1.0.0",
   "main": "index.js",
   "repository": "https://github.com/Rodcode/vetCallReview.git",
+  "homepage": "http://Rodcode.github.io/vetCallReview.git",
   "author": "Rodcode",
   "license": "MIT",
+  "scripts": {
+    "predeploy" : "npm run build",
+    "deploy" : "gh-pages -d build"
+  },
   "dependencies": {
     "babel-preset-env": "1.5.2",
     "babel-preset-react": "6.24.1"
+  },
+  "devDependencies": {
+    "gh-pages": "^5.0.0"
   }
 }
