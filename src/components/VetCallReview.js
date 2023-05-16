@@ -28,11 +28,15 @@ class VetCallReview extends Component {
     const petOwner = analytics["critical_details"]["pet_owner_name"];
     return (
       <div>
-        <Header practiceName={practiceName} />
-        <FileUpload handleAudio={this.handleAudio} />
-        <ListHistory history={history} />
-        <Transcript transcript={transcript} petOwner={petOwner} />
-        <Analytics analytics={analytics} />
+        <div className="container">
+          <Header practiceName={practiceName} />
+          <FileUpload handleAudio={this.handleAudio} />
+        </div>
+        <div className="container flex-row">
+          <ListHistory history={history} />
+          <Transcript transcript={transcript} petOwner={petOwner} />
+          <Analytics analytics={analytics} />
+        </div>
       </div>
     );
   }
