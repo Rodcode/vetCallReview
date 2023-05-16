@@ -1,3 +1,5 @@
+import axios from "axios";
+
 const Header = (props) => {
   const { logoUrl, practiceName } = props;
   return (
@@ -10,19 +12,21 @@ const Header = (props) => {
 
 class UploadFile extends React.Component {
   constructor(props) {
-    super(props), (this.handleFileUpload = this.handleFileUpload.bind(this));
+    super(props);
+    this.handleFileUpload = this.handleFileUpload.bind(this);
   }
 
-  handleFileUpload(e) {
-    e.preventDefault();
-    this.props.handleAudio(e.target.audio.value);
-  }
+  handleFileUpload = async (event) => {
+    event.preventDefault();
+    const audioFile = event.target.elements.audio.files[0];
+    this.props.handleAudio(audioFile);
+  };
 
   render() {
     return (
       <div>
         <h3>Drag Drop</h3>
-        <form onSubmit={this.handleFileUpload}>
+        <form encType="multipart/form-data" onSubmit={this.handleFileUpload}>
           <input type="file" name="audio"></input>
           <button>Upload</button>
         </form>
@@ -48,35 +52,28 @@ const HistoryList = (props) => {
   );
 };
 
-const Msg = (props) => {
-  const { owner, str, desk } = props;
-  const isOwner = str.split(":")[0] === owner;
-  const speaker = isOwner ? owner : desk;
-  const msg = isOwner
-    ? str.replace(`${owner}:`, "")
-    : str.replace(`${desk}:`, "");
-  return (
-    <div>
-      <h4>{speaker}</h4>
-      <p>{msg}</p>
-    </div>
-  );
-};
+// ...
 
 const Transcript = (props) => {
-  const transcript = props.transcript
-    .split("[")
-    .filter((msg) => msg !== "")
-    .map((msg) =>
-      msg
-        .replace("Pet Owner]", props.petOwner.split(" ")[0])
-        .replace("Vet Front Desk]", props.vetDesk)
-    );
-  const owner = props.petOwner.split(" ")[0];
+  if (!props.transcript) {
+    return <p>No transcript available</p>;
+  }
+
+  const transcript = props.transcript.text;
+
+  // Extract speakers and replace them with the names from props
+  const speakers = Object.keys(transcript).map((key) => {
+    const speaker = key === "speaker_1" ? props.petOwner.split(" ")[0] : props.vetDesk;
+    return { speaker, text: transcript[key] };
+  });
+
   return (
     <div>
-      {transcript.map((str, i) => (
-        <Msg key={i} str={str} owner={owner} desk={props.vetDesk} />
+      {speakers.map((speakerObj, i) => (
+        <div key={i}>
+          <strong>{speakerObj.speaker}: </strong>
+          <span>{speakerObj.text}</span>
+        </div>
       ))}
     </div>
   );
@@ -109,9 +106,9 @@ const CriticalDetails = (props) => {
 
 class Analytics extends React.Component {
   constructor(props) {
-    super(props),
-      ((this.createContentArray = this.createContentArray.bind(this)),
-      (this.state = props.analytics));
+    super(props);
+    this.createContentArray = this.createContentArray.bind(this);
+    this.state = props.analytics;
   }
 
   formatCategory(cat) {
@@ -168,30 +165,50 @@ class Analytics extends React.Component {
 
 class VetCallReviewApp extends React.Component {
   constructor(props) {
-    super(props),
-      ((this.handleAudio = this.handleAudio.bind(this)),
-      (this.state = {
-        practiceName: props.practiceName,
-        logoUrl: props.logoUrl,
-        transcript: props.transcript,
-        analytics: props.analytics,
-        history: props.history,
-      }));
+    super(props);
+    this.handleAudio = this.handleAudio.bind(this);
+    this.state = {
+      practiceName: props.practiceName,
+      logoUrl: props.logoUrl,
+      transcript: props.transcript,
+      analytics: props.analytics,
+      history: props.history,
+    };
   }
-  handleAudio(audioFile) {
-    // const transcript = trancriptAPI(audioFile); return string
-    // update this.state.transcript = transcript
-    // const analytics = analyticsAPI(transcript); return JSON obj
-    // update this.state.analytics = analytics
+  handleAudio = async (audioFile) => {
+    const formData = new FormData();
+    formData.append("audio_file", audioFile);
     console.log(audioFile);
-  }
+  
+    const apiKey = "123"; // temporary
+  
+    try {
+      const response = await axios.post(
+        `http://127.0.0.1:8000/transcribe?api_key=${apiKey}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            //"Authorization": apiKey,
+          },
+        }
+      );
+      const responseJson = JSON.parse(response.data.response);
+      const transcript = responseJson;
+      this.setState({ transcript });
+  
+      // Call analytics endpoint if needed
+    } catch (error) {
+      console.log(error);
+    }
+  };
   render() {
     const { practiceName, logoUrl, transcript, analytics, history } =
       this.state;
     const petOwner = analytics["critical_details"]["pet_owner_name"];
     return (
       <div>
-        <Header practiceName={practiceName} />
+        <Header practiceName={practiceName} logoUrl={logoUrl} />
         <UploadFile handleAudio={this.handleAudio} />
         <HistoryList history={history} />
         <Transcript transcript={transcript} petOwner={petOwner} />
@@ -201,47 +218,8 @@ class VetCallReviewApp extends React.Component {
   }
 }
 
-const transcript = `[Pet Owner]: Good morning, I'm calling to schedule an
-appointment for my dog, Max. He's been experiencing some discomfort lately
-and I'd like to get him checked out.
-[Vet Front Desk]: Good morning! I'm sorry to hear that Max is not feeling
-well. We'd be happy to help. To better assist you, may I have your name
-and Max's details, like breed and age, please?
-[Pet Owner]: Sure, my name is Sarah Johnson, and Max is a 6-year-old
-Golden Retriever.
-[Vet Front Desk]: Thank you, Sarah. I see Max's records here in our
-system. Is he up to date on his vaccines?
-[Pet Owner]: Yes, he had his vaccines last year, and as far as I know,
-he's up to date.
-[Vet Front Desk]: Great! That's always helpful information for us to know.
-Now, let's find the perfect time for Max's appointment. We have some
-availability this week. Would you prefer a morning or afternoon
-appointment?
-[Pet Owner]: I'd prefer a morning appointment if possible.
-[Vet Front Desk]: We have a few openings tomorrow morning, one at 9:00 AM
-and another at 10:30 AM. Would either of those work for you?
-[Pet Owner]: The 10:30 AM appointment would be perfect.
-[Vet Front Desk]: Great, I've scheduled Max for 10:30 AM tomorrow morning.
-Just to confirm, you mentioned he's been experiencing some discomfort.
-Could you provide some more details about his symptoms, so the
-veterinarian can be better prepared for the appointment?
-[Pet Owner]: Of course. He's been limping a bit, especially after going
-for walks or playing outside. He also seems to be licking his paws more
-than usual, and I think he might have a rash or some irritation on them.
-[Vet Front Desk]: Thank you for providing that information, Sarah. I'll
-make a note of those symptoms in Max's appointment details, so the
-veterinarian will be aware of them. Is there anything else you'd like us
-to know before the appointment?
-[Pet Owner]: No, I think that covers everything.
-[Vet Front Desk]: Alright, we'll see you and Max tomorrow at 10:30 AM. If
-you need to reschedule or have any questions before the appointment,
-please don't hesitate to call us.
-[Pet Owner]: Thank you so much, I appreciate your help. We'll see you
-tomorrow.
-[Vet Front Desk]: You're welcome, Sarah. Have a great day, and we'll see
-you and Max soon. Goodbye!
-[Pet Owner]: Goodbye!`;
-
+// temp data
+const transcript = null
 const analytics = {
   tone_of_call: "friendly and helpful",
   critical_details: {
@@ -265,7 +243,7 @@ VetCallReviewApp.defaultProps = {
   practiceName: "[Veterinary Practices Name]",
   logoUrl: "",
   file: {},
-  transcript: transcript,
+  transcript: null,
   analytics: analytics,
   history: [],
 };
