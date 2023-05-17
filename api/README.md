@@ -95,3 +95,29 @@ setx OPENAI_API_KEY "your_openai_api_key"
 ```cmd
 setx API_KEY "your_api_key"
 ```
+
+### Curl commands for the API:
+
+1. To check the health of the API:
+
+```bash
+curl -X GET "http://localhost:8000/health?api_key=YOUR_API_KEY"
+```
+
+Replace `YOUR_API_KEY` with the actual API key.
+
+2. To transcribe an audio file:
+
+```bash
+curl -X POST "http://localhost:8000/transcribe?api_key=YOUR_API_KEY" -H "Content-Type: multipart/form-data" -F "audio_file=@/path/to/your/audio_file.wav"
+```
+
+Replace `YOUR_API_KEY` with the actual API key and `/path/to/your/audio_file.wav` with the path to the audio file you want to transcribe.
+
+3. To analyze a transcript:
+
+```bash
+curl -X POST "http://localhost:8000/analyze?api_key=YOUR_API_KEY" -H "Content-Type: application/json" -d '{"transcript": "Put the transcript text here"}'
+```
+
+Replace `YOUR_API_KEY` with the actual API key and `Put the transcript text here` with the transcript text you want to analyze.

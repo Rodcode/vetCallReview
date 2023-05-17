@@ -15,3 +15,6 @@ node_modules
 
 # python
 __pycache__/
+
+# temp files
+api/tmp/
