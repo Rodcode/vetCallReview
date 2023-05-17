@@ -3,9 +3,16 @@ import React from "react";
 const Header = (props) => {
   const { logoUrl, practiceName } = props;
   return (
-    <div>
-      <img src={logoUrl} alt={practiceName + " Logo goes here."} />
-      <p>{practiceName} Vet Front Desk Call Review</p>
+    <div className="header">
+      <img
+        className="header__logo"
+        src={logoUrl}
+        alt={practiceName + " Logo goes here."}
+      />
+      <div className="header__title">
+        <h1>{practiceName}</h1>
+        <h2>Vet Front Desk Call Review</h2>
+      </div>
     </div>
   );
 };
